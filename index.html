@@ -70,9 +70,9 @@
     #info h1 { font-size: 16px; letter-spacing: 1px; }
     #info p { font-size: 10px; margin-top: 2px; line-height: 1.4; }
     #badge { display: none; }
-    #search-box { top: 10px; right: 10px; padding: 4px 10px; gap: 4px; }
-    #search-box input { font-size: 11px; width: 90px; }
-    #search-box button { font-size: 11px; padding: 3px 8px; }
+    #search-box { top: 10px; right: 10px; padding: 4px 8px; gap: 4px; }
+    #search-box input { font-size: 10px; width: 70px; }
+    #search-box button { font-size: 10px; padding: 3px 6px; }
     #tooltip { max-width: 240px; padding: 8px 12px; font-size: 12px; }
     #now-playing { min-width: 200px; max-width: 90vw; padding: 10px 14px; }
     #np-id { font-size: 13px; }
@@ -102,6 +102,7 @@
 <div id="search-box">
   <input id="search-input" type="text" placeholder="输入 ID 跳转..." />
   <button id="search-btn">定位</button>
+  <button id="playall-btn">连播</button>
 </div>
 
 <div id="tooltip">
@@ -1617,6 +1618,8 @@ function playBlessing(idx) {
     });
     audio.addEventListener('ended', () => {
       setTimeout(()=>nowPlaying.classList.remove('show'), 600);
+      // 连播模式：1.2秒后播下一条
+      if (playAllActive) setTimeout(playNextBlessing, 1200);
     });
     // 先给个1秒的预估进度，等loadedmetadata再校正
     startPlay(2000);
@@ -1668,7 +1671,51 @@ function animateCamera(fromPos, toPos, fromTgt, toTgt) {
   step();
 }
 
-/* ============== 7. 渲染循环 ============== */
+/* ============== 6.5 连播功能 ============== */
+let playAllIdx = -1;
+let playAllActive = false;
+const playAllBtn = document.getElementById('playall-btn');
+
+playAllBtn.addEventListener('click', () => {
+  if (playAllActive) {
+    stopPlayAll();
+  } else {
+    startPlayAll();
+  }
+});
+
+function startPlayAll() {
+  playAllActive = true;
+  playAllIdx = -1;
+  playAllBtn.textContent = '停止';
+  playAllBtn.style.background = 'rgba(255,107,107,.4)';
+  playNextBlessing();
+}
+
+function stopPlayAll() {
+  playAllActive = false;
+  playAllBtn.textContent = '连播';
+  playAllBtn.style.background = 'rgba(255,217,138,.15)';
+  stopCurrentAudio();
+}
+
+function playNextBlessing() {
+  if (!playAllActive) return;
+  playAllIdx++;
+  while (playAllIdx < blessings.length && (!blessings[playAllIdx] || !blessings[playAllIdx].audio)) {
+    playAllIdx++;
+  }
+  if (playAllIdx >= blessings.length) {
+    // 播完了
+    playAllActive = false;
+    playAllBtn.textContent = '连播';
+    playAllBtn.style.background = 'rgba(255,217,138,.15)';
+    return;
+  }
+  playBlessing(playAllIdx);
+}
+
+
 function resize() {
   camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
