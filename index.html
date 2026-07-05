@@ -1480,7 +1480,7 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
     const b = blessings[idx];
     if (b) {
       tipId.textContent = '#' + b.id;
-      tipName.textContent = b.name + (b.text ? ' · ' + b.text : '');
+      tipName.textContent = b.name;
     } else {
       tipId.textContent = '';
       tipName.textContent = '✨ 待点亮';
@@ -1530,7 +1530,7 @@ function playBlessing(idx) {
   stopCurrentAudio();
 
   npId.textContent = '#' + b.id;
-  npName.textContent = b.name + (b.text ? ' · ' + b.text : '');
+  npName.textContent = b.name;
   nowPlaying.classList.add('show');
 
   // 播放时让该粒子闪一下
@@ -1546,9 +1546,25 @@ function playBlessing(idx) {
   };
 
   if (b.audio) {
-    // 播放真实 MP3
-    const audio = new Audio(b.audio);
+    // 播放真实 MP3（用全局 audio 元素，兼容手机浏览器自动播放限制）
+    if (!window._sharedAudio) {
+      window._sharedAudio = new Audio();
+      window._sharedAudio.setAttribute('playsinline', '');
+      window._sharedAudio.setAttribute('webkit-playsinline', '');
+    }
+    const audio = window._sharedAudio;
     currentAudio = audio;
+    audio.src = b.audio;
+    audio.load();
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.then(() => {
+        startPlay((audio.duration || 3) * 1000);
+      }).catch(() => {
+        npName.textContent = b.name + '（点击页面任意位置后再次点击即可播放）';
+        startPlay(2000);
+      });
+    }
     audio.addEventListener('loadedmetadata', () => {
       startPlay((audio.duration || 3) * 1000);
     });
@@ -1559,10 +1575,6 @@ function playBlessing(idx) {
     });
     audio.addEventListener('ended', () => {
       setTimeout(()=>nowPlaying.classList.remove('show'), 600);
-    });
-    audio.play().catch(() => {
-      npName.textContent = b.name + '（点击页面任意位置后再次点击即可播放）';
-      startPlay(2000);
     });
     // 先给个1秒的预估进度，等loadedmetadata再校正
     startPlay(2000);
