@@ -63,6 +63,21 @@
   #np-label { font-size: 11px; color: #7c6e5a; letter-spacing: 1px; }
   #np-id { font-size: 15px; color: #ffd98a; font-weight: 600; margin-top: 2px; }
   #np-name { font-size: 13px; color: #f4e8c8; margin-top: 2px; line-height: 1.5; word-wrap: break-word; }
+
+  /* 手机适配 */
+  @media (max-width: 768px) {
+    #info { top: 10px; left: 12px; }
+    #info h1 { font-size: 16px; letter-spacing: 1px; }
+    #info p { font-size: 10px; margin-top: 2px; line-height: 1.4; }
+    #badge { display: none; }
+    #search-box { top: 10px; right: 10px; padding: 4px 10px; gap: 4px; }
+    #search-box input { font-size: 11px; width: 90px; }
+    #search-box button { font-size: 11px; padding: 3px 8px; }
+    #tooltip { max-width: 240px; padding: 8px 12px; font-size: 12px; }
+    #now-playing { min-width: 200px; max-width: 90vw; padding: 10px 14px; }
+    #np-id { font-size: 13px; }
+    #np-name { font-size: 12px; }
+  }
   #np-progress { height: 3px; background: rgba(255,217,138,.15); border-radius: 2px; margin-top: 8px; overflow: hidden; }
   #np-bar { height: 100%; width: 0; background: linear-gradient(90deg,#ffb84d,#ffd98a); transition: width .1s linear; }
 
@@ -1480,7 +1495,7 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
     const b = blessings[idx];
     if (b) {
       tipId.textContent = '#' + b.id;
-      tipName.textContent = b.name;
+      tipName.textContent = b.name + (b.text ? ' · ' + b.text : '');
     } else {
       tipId.textContent = '';
       tipName.textContent = '✨ 待点亮';
@@ -1500,10 +1515,37 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
   }
 });
 
-renderer.domElement.addEventListener('click', (ev) => {
-  const idx = pickIndex(ev);
+// 首次用户交互解锁音频（手机浏览器要求）
+let audioUnlocked = false;
+function unlockAudio() {
+  if (audioUnlocked) return;
+  if (!window._sharedAudio) {
+    window._sharedAudio = new Audio();
+    window._sharedAudio.setAttribute('playsinline', '');
+    window._sharedAudio.setAttribute('webkit-playsinline', '');
+  }
+  window._sharedAudio.play().then(() => {
+    window._sharedAudio.pause();
+    window._sharedAudio.currentTime = 0;
+    audioUnlocked = true;
+  }).catch(() => {});
+}
+document.addEventListener('touchstart', unlockAudio, { once: true });
+document.addEventListener('click', unlockAudio, { once: true });
+
+// 点击/触摸播放
+function onCanvasTap(ev) {
+  const touches = ev.changedTouches;
+  const pos = touches ? touches[0] : ev;
+  const fakeEv = { clientX: pos.clientX, clientY: pos.clientY };
+  const idx = pickIndex(fakeEv);
   if (idx >= 0) playBlessing(idx);
-});
+}
+renderer.domElement.addEventListener('click', onCanvasTap);
+renderer.domElement.addEventListener('touchend', (ev) => {
+  ev.preventDefault();
+  onCanvasTap(ev);
+}, { passive: false });
 
 /* ============== 5. 音频播放 ============== */
 let currentAudio = null;
@@ -1530,7 +1572,7 @@ function playBlessing(idx) {
   stopCurrentAudio();
 
   npId.textContent = '#' + b.id;
-  npName.textContent = b.name;
+  npName.textContent = b.name + (b.text ? ' · ' + b.text : '');
   nowPlaying.classList.add('show');
 
   // 播放时让该粒子闪一下
