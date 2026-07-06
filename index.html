@@ -70,16 +70,81 @@
     #info h1 { font-size: 16px; letter-spacing: 1px; }
     #info p { font-size: 10px; margin-top: 2px; line-height: 1.4; }
     #badge { display: none; }
-    #search-box { top: 10px; right: 10px; padding: 4px 8px; gap: 4px; }
-    #search-box input { font-size: 10px; width: 70px; }
-    #search-box button { font-size: 10px; padding: 3px 6px; }
+    #search-box { top: 10px; right: 10px; padding: 3px 6px; gap: 3px; }
+    #search-box input { font-size: 10px; width: 60px; }
+    #search-box button { font-size: 9px; padding: 2px 5px; }
     #tooltip { max-width: 240px; padding: 8px 12px; font-size: 12px; }
-    #now-playing { min-width: 200px; max-width: 90vw; padding: 10px 14px; }
+    #now-playing { min-width: 200px; max-width: 90vw; padding: 10px 14px; bottom: 20px; }
     #np-id { font-size: 13px; }
     #np-name { font-size: 12px; }
+    #np-time { font-size: 10px; }
+    #np-playpause { font-size: 10px; padding: 2px 8px; }
+    #bgm-btn { bottom: 14px; left: 12px; font-size: 10px; padding: 6px 10px; }
   }
-  #np-progress { height: 3px; background: rgba(255,217,138,.15); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  #np-progress { height: 6px; background: rgba(255,217,138,.15); border-radius: 3px; margin-top: 8px; overflow: hidden; cursor: pointer; position: relative; }
+  #np-progress:hover { background: rgba(255,217,138,.25); }
   #np-bar { height: 100%; width: 0; background: linear-gradient(90deg,#ffb84d,#ffd98a); transition: width .1s linear; }
+  #np-time { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 11px; color: #b8a98a; }
+  #np-playpause {
+    background: rgba(255,217,138,.15); border: 1px solid rgba(255,217,138,.3);
+    color: #ffd98a; font-size: 11px; padding: 3px 10px; border-radius: 12px;
+    cursor: pointer; font-family: inherit;
+  }
+  #np-playpause:hover { background: rgba(255,217,138,.3); }
+
+  /* 祝福目录面板 */
+  #list-panel {
+    position: fixed; top: 0; right: -480px; width: 460px; max-width: 100vw;
+    height: 100vh; z-index: 50; background: rgba(15,10,22,.96);
+    backdrop-filter: blur(12px); border-left: 1px solid rgba(255,217,138,.25);
+    transition: right .35s ease; display: flex; flex-direction: column;
+  }
+  #list-panel.show { right: 0; }
+  #list-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px; border-bottom: 1px solid rgba(255,217,138,.15);
+  }
+  #list-title { color: #ffd98a; font-size: 16px; letter-spacing: 2px; font-weight: 600; }
+  #list-close {
+    background: none; border: none; color: #b8a98a; font-size: 26px;
+    cursor: pointer; line-height: 1; padding: 0;
+  }
+  #list-close:hover { color: #ffd98a; }
+  #list-content {
+    flex: 1; overflow-y: auto; padding: 12px 20px;
+  }
+  #list-content::-webkit-scrollbar { width: 6px; }
+  #list-content::-webkit-scrollbar-track { background: transparent; }
+  #list-content::-webkit-scrollbar-thumb { background: rgba(255,217,138,.25); border-radius: 3px; }
+  .list-item {
+    padding: 12px 14px; margin: 8px 0; border-radius: 8px;
+    background: rgba(255,217,138,.04); border: 1px solid rgba(255,217,138,.1);
+    cursor: pointer; transition: all .2s;
+  }
+  .list-item:hover {
+    background: rgba(255,217,138,.12); border-color: rgba(255,217,138,.4);
+    transform: translateX(-3px);
+  }
+  .list-item .li-id { color: #ffd98a; font-size: 13px; font-weight: 600; }
+  .list-item .li-name { color: #f4e8c8; font-size: 14px; margin-top: 3px; }
+  .list-item .li-text { color: #b8a98a; font-size: 12px; margin-top: 5px; line-height: 1.5; }
+  .list-item .li-pending { color: #5a4e3a; font-style: italic; }
+
+  /* 背景音乐按钮 */
+  #bgm-btn {
+    position: fixed; bottom: 20px; left: 20px; z-index: 20;
+    background: rgba(15,10,22,.7); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,217,138,.3); color: #ffd98a;
+    font-size: 12px; padding: 8px 14px; border-radius: 20px;
+    cursor: pointer; font-family: inherit; letter-spacing: 1px;
+    transition: all .2s;
+  }
+  #bgm-btn:hover { background: rgba(255,217,138,.2); }
+  #bgm-btn.playing { background: rgba(255,184,77,.3); border-color: rgba(255,217,138,.6); }
+  #bgm-btn.playing::before {
+    content: '♪ '; animation: spin 2s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* 加载 */
   #loading {
@@ -103,6 +168,18 @@
   <input id="search-input" type="text" placeholder="输入 ID 跳转..." />
   <button id="search-btn">定位</button>
   <button id="playall-btn">连播</button>
+  <button id="list-btn">目录</button>
+</div>
+
+<button id="bgm-btn" title="背景音乐">🎵 背景音乐</button>
+
+<!-- 全部祝福文字面板 -->
+<div id="list-panel">
+  <div id="list-header">
+    <span id="list-title">全部祝福</span>
+    <button id="list-close">×</button>
+  </div>
+  <div id="list-content"></div>
 </div>
 
 <div id="tooltip">
@@ -116,6 +193,10 @@
   <div id="np-id"></div>
   <div id="np-name"></div>
   <div id="np-progress"><div id="np-bar"></div></div>
+  <div id="np-time">
+    <span id="np-current">0:00</span> / <span id="np-duration">0:00</span>
+    <button id="np-playpause">⏸ 暂停</button>
+  </div>
 </div>
 
 <div id="loading">
@@ -1540,13 +1621,76 @@ function onCanvasTap(ev) {
   const pos = touches ? touches[0] : ev;
   const fakeEv = { clientX: pos.clientX, clientY: pos.clientY };
   const idx = pickIndex(fakeEv);
-  if (idx >= 0) playBlessing(idx);
+  if (idx >= 0) {
+    playBlessing(idx);
+  } else {
+    // 点击空白处，隐藏播放栏
+    hideNowPlaying();
+  }
 }
 renderer.domElement.addEventListener('click', onCanvasTap);
 renderer.domElement.addEventListener('touchend', (ev) => {
   ev.preventDefault();
   onCanvasTap(ev);
 }, { passive: false });
+
+function hideNowPlaying() {
+  nowPlaying.classList.remove('show');
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  duckBGM(false); // 恢复 BGM 音量
+  if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+  npPlayPause.textContent = '⏸ 暂停';
+  npCurrent.textContent = '0:00';
+  npDuration.textContent = '0:00';
+  npBar.style.width = '0%';
+  // 如果正在连播，停止
+  if (playAllActive) stopPlayAll();
+}
+
+// 拖拽/缩放控制时隐藏播放栏
+controls.addEventListener('start', () => {
+  hideNowPlaying();
+});
+
+/* ============== 4.5 背景音乐 ============== */
+let bgmAudio = null;
+let bgmPlaying = false;
+const bgmBtn = document.getElementById('bgm-btn');
+
+bgmBtn.addEventListener('click', () => {
+  if (bgmPlaying) {
+    // 暂停 BGM
+    if (bgmAudio) bgmAudio.pause();
+    bgmPlaying = false;
+    bgmBtn.classList.remove('playing');
+    bgmBtn.textContent = '🎵 背景音乐';
+  } else {
+    // 播放 BGM
+    if (!bgmAudio) {
+      bgmAudio = new Audio('audio/bgm.mp3');
+      bgmAudio.loop = true; // 循环播放
+      bgmAudio.volume = 0.3; // 音量小一点，不抢祝福
+    }
+    bgmAudio.play().then(() => {
+      bgmPlaying = true;
+      bgmBtn.classList.add('playing');
+      bgmBtn.textContent = '背景音乐';
+    }).catch(() => {
+      bgmBtn.textContent = '🎵 点一下再试';
+      setTimeout(() => bgmBtn.textContent = '🎵 背景音乐', 2000);
+    });
+  }
+});
+
+// 播放祝福时自动调低 BGM 音量，播完恢复
+function duckBGM(on) {
+  if (!bgmAudio || !bgmPlaying) return;
+  bgmAudio.volume = on ? 0.08 : 0.3;
+}
 
 /* ============== 5. 音频播放 ============== */
 let currentAudio = null;
@@ -1555,7 +1699,30 @@ const nowPlaying = document.getElementById('now-playing');
 const npId = document.getElementById('np-id');
 const npName = document.getElementById('np-name');
 const npBar = document.getElementById('np-bar');
+const npProgress = document.getElementById('np-progress');
+const npCurrent = document.getElementById('np-current');
+const npDuration = document.getElementById('np-duration');
+const npPlayPause = document.getElementById('np-playpause');
 let progressTimer = null;
+
+// 点击播放栏内部不隐藏
+nowPlaying.addEventListener('click', (e) => e.stopPropagation());
+nowPlaying.addEventListener('touchstart', (e) => e.stopPropagation());
+
+function formatTime(s) {
+  if (!s || isNaN(s)) return '0:00';
+  const m = Math.floor(s/60);
+  const sec = Math.floor(s%60).toString().padStart(2,'0');
+  return m + ':' + sec;
+}
+
+// 点击进度条跳转
+npProgress.addEventListener('click', (e) => {
+  if (!currentAudio || !currentAudio.duration) return;
+  const rect = npProgress.getBoundingClientRect();
+  const ratio = (e.clientX - rect.left) / rect.width;
+  currentAudio.currentTime = ratio * currentAudio.duration;
+});
 
 function stopCurrentAudio() {
   if (currentAudio) {
@@ -1563,7 +1730,9 @@ function stopCurrentAudio() {
     currentAudio.currentTime = 0;
     currentAudio = null;
   }
-  if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+  npBar.style.width = '0%';
+  npCurrent.textContent = '0:00';
+  npDuration.textContent = '0:00';
 }
 
 function playBlessing(idx) {
@@ -1579,13 +1748,17 @@ function playBlessing(idx) {
   // 播放时让该粒子闪一下
   flashParticle(idx);
 
-  const startPlay = (durMs) => {
-    const start = performance.now();
-    progressTimer = setInterval(() => {
-      const p = durMs > 0 ? Math.min(1, (performance.now() - start) / durMs) : 0;
-      npBar.style.width = (p*100) + '%';
-      if (p >= 1) { clearInterval(progressTimer); setTimeout(()=>nowPlaying.classList.remove('show'), 800); }
-    }, 60);
+  // 重置暂停按钮点击事件
+  npPlayPause.onclick = (e) => {
+    e.stopPropagation();
+    if (!currentAudio) return;
+    if (currentAudio.paused) {
+      currentAudio.play().catch(()=>{});
+      npPlayPause.textContent = '⏸ 暂停';
+    } else {
+      currentAudio.pause();
+      npPlayPause.textContent = '▶ 继续';
+    }
   };
 
   if (b.audio) {
@@ -1599,33 +1772,54 @@ function playBlessing(idx) {
     currentAudio = audio;
     audio.src = b.audio;
     audio.load();
+    npPlayPause.textContent = '⏸ 暂停';
+
+    // 用 timeupdate 事件实时更新进度条和时间
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        const p = audio.currentTime / audio.duration;
+        npBar.style.width = (p * 100) + '%';
+        npCurrent.textContent = formatTime(audio.currentTime);
+        npDuration.textContent = formatTime(audio.duration);
+      }
+    });
+    audio.addEventListener('loadedmetadata', () => {
+      npDuration.textContent = formatTime(audio.duration);
+    });
+    audio.addEventListener('play', () => {
+      npPlayPause.textContent = '⏸ 暂停';
+    });
+    audio.addEventListener('pause', () => {
+      npPlayPause.textContent = '▶ 继续';
+    });
+    duckBGM(true); // 调低 BGM
     const playPromise = audio.play();
     if (playPromise) {
-      playPromise.then(() => {
-        startPlay((audio.duration || 3) * 1000);
-      }).catch(() => {
+      playPromise.catch(() => {
         npName.textContent = b.name + '（点击页面任意位置后再次点击即可播放）';
-        startPlay(2000);
       });
     }
-    audio.addEventListener('loadedmetadata', () => {
-      startPlay((audio.duration || 3) * 1000);
-    });
     audio.addEventListener('error', () => {
       // 音频文件不存在时，显示提示
       npName.textContent = b.name + '（音频未找到，请检查 ' + b.audio + '）';
-      startPlay(1500);
     });
     audio.addEventListener('ended', () => {
-      setTimeout(()=>nowPlaying.classList.remove('show'), 600);
+      duckBGM(false); // 恢复 BGM 音量
       // 连播模式：1.2秒后播下一条
       if (playAllActive) setTimeout(playNextBlessing, 1200);
+      else {
+        // 播完后进度条拉满，按钮变成"重播"
+        npBar.style.width = '100%';
+        npPlayPause.textContent = '▶ 重播';
+        npPlayPause.onclick = () => {
+          audio.currentTime = 0;
+          audio.play().catch(()=>{});
+          npPlayPause.textContent = '⏸ 暂停';
+        };
+      }
     });
-    // 先给个1秒的预估进度，等loadedmetadata再校正
-    startPlay(2000);
   } else {
-    // 没有配置音频：短暂提示
-    startPlay(1200);
+    // 没有配置音频：不自动隐藏
   }
 }
 
@@ -1715,6 +1909,57 @@ function playNextBlessing() {
   playBlessing(playAllIdx);
 }
 
+
+/* ============== 6.6 祝福目录面板 ============== */
+const listPanel = document.getElementById('list-panel');
+const listContent = document.getElementById('list-content');
+const listBtn = document.getElementById('list-btn');
+const listClose = document.getElementById('list-close');
+
+listBtn.addEventListener('click', () => {
+  if (listPanel.classList.contains('show')) {
+    listPanel.classList.remove('show');
+  } else {
+    renderList();
+    listPanel.classList.add('show');
+  }
+});
+listClose.addEventListener('click', () => listPanel.classList.remove('show'));
+
+function renderList() {
+  let html = '';
+  let count = 0;
+  blessings.forEach((b, i) => {
+    if (b) {
+      count++;
+      html += `<div class="list-item" data-idx="${i}">
+        <div class="li-id">#${b.id}</div>
+        <div class="li-name">${b.name}</div>
+        ${b.text ? `<div class="li-text">${b.text}</div>` : ''}
+      </div>`;
+    } else if (i < SAMPLE) {
+      html += `<div class="list-item" data-idx="${i}">
+        <div class="li-pending">✨ 待点亮 #${(i+1).toString().padStart(3,'0')}</div>
+      </div>`;
+    }
+  });
+  document.getElementById('list-title').textContent = `全部祝福（${count}/${SAMPLE}）`;
+  listContent.innerHTML = html;
+  // 点击列表项跳转并播放
+  listContent.querySelectorAll('.list-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.idx);
+      if (blessings[idx]) {
+        listPanel.classList.remove('show');
+        const p = new THREE.Vector3(...positions[idx]);
+        const dir = p.clone().normalize();
+        const target = p.clone().add(dir.multiplyScalar(2.5));
+        animateCamera(camera.position.clone(), target, controls.target.clone(), p);
+        setTimeout(()=>playBlessing(idx), 700);
+      }
+    });
+  });
+}
 
 function resize() {
   camera.aspect = innerWidth/innerHeight;
